@@ -1,0 +1,16 @@
+version: '3.3'
+
+services:
+  dev-db:
+    image: postgres:13
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: nest-bookmarks-user
+      POSTGRES_PASSWORD: nest-bookmarks-password
+      POSTGRES_DB: nest-bookmarks-db
+    networks:
+      - nest-bookmarks-network
+
+networks:
+  nest-bookmarks-network:
