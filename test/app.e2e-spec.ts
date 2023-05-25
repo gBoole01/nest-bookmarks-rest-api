@@ -4,6 +4,7 @@ import { AppModule } from '../src/app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AuthDto } from 'src/auth/dto';
+import { EditUserDto } from 'src/user/dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
@@ -143,6 +144,10 @@ describe('App e2e', () => {
 
   describe('User', () => {
     describe('Get me', () => {
+      it('should return 401 on missing token', () => {
+        return pactum.spec().get('/users/me').expectStatus(401);
+      });
+
       it('should return currently logged in user', () => {
         return pactum
           .spec()
@@ -153,29 +158,147 @@ describe('App e2e', () => {
     });
 
     describe('Edit user', () => {
-      it.todo('should update currently logged in user');
+      const dto: EditUserDto = {
+        firstName: 'test',
+        lastName: 'test',
+      };
+      it('should return 401 on missing token', () => {
+        return pactum.spec().patch('/users').expectStatus(401);
+      });
+
+      it('should return 400 on invalid email', () => {
+        return pactum
+          .spec()
+          .patch('/users')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .withBody({ ...dto, email: 'test' })
+          .expectStatus(400);
+      });
+
+      it('should update currently logged in user', () => {
+        return pactum
+          .spec()
+          .patch('/users')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .withBody(dto)
+          .expectStatus(200)
+          .expectBodyContains(dto.firstName)
+          .expectBodyContains(dto.lastName);
+      });
     });
   });
 
   describe('Bookmarks', () => {
     describe('Create bookmark', () => {
-      it.todo('should create a bookmark');
+      it('should return 401 on missing token', () => {
+        return pactum.spec().post('/bookmarks').expectStatus(401);
+      });
+
+      it('should return 400 on missing body', () => {
+        return pactum
+          .spec()
+          .post('/bookmarks')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(400);
+      });
+
+      it('should create a bookmark', () => {
+        const dto = {
+          title: 'test',
+          description: 'test',
+          link: 'https://test.test',
+        };
+
+        return pactum
+          .spec()
+          .post('/bookmarks')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .withBody(dto)
+          .expectStatus(201)
+          .expectBodyContains(dto.title)
+          .expectBodyContains(dto.description)
+          .expectBodyContains(dto.link);
+      });
     });
 
     describe('Get all bookmarks', () => {
-      it.todo('should return all bookmarks');
+      it('should return 401 on missing token', () => {
+        return pactum.spec().get('/bookmarks').expectStatus(401);
+      });
+
+      it('should return all bookmarks', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(200);
+      });
     });
 
     describe('Get bookmark by id', () => {
-      it.todo('should return a bookmark by id');
+      it('should return 401 on missing token', () => {
+        return pactum.spec().get('/bookmarks/1').expectStatus(401);
+      });
+
+      it('should return 404 on missing bookmark', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks/999')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(404);
+      });
+
+      it('should return a bookmark by id', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks/1')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(200);
+      });
     });
 
     describe('Edit bookmark by id', () => {
-      it.todo('should update a bookmark');
+      it('should return 401 on missing token', () => {
+        return pactum.spec().patch('/bookmarks/1').expectStatus(401);
+      });
+
+      it('should return 404 on missing bookmark', () => {
+        return pactum
+          .spec()
+          .patch('/bookmarks/999')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(404);
+      });
+
+      it('should update a bookmark', () => {
+        return pactum
+          .spec()
+          .patch('/bookmarks/1')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(200);
+      });
     });
 
     describe('Delete bookmark by id', () => {
-      it.todo('should delete a bookmark');
+      it('should return 401 on missing token', () => {
+        return pactum.spec().delete('/bookmarks/1').expectStatus(401);
+      });
+
+      it('should return 404 on missing bookmark', () => {
+        return pactum
+          .spec()
+          .delete('/bookmarks/999')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(404);
+      });
+
+      it('should delete a bookmark', () => {
+        return pactum
+          .spec()
+          .delete('/bookmarks/1')
+          .withHeaders({ Authorization: 'Bearer $S{userAt}' })
+          .expectStatus(200);
+      });
     });
   });
 });
